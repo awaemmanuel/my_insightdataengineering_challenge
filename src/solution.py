@@ -305,9 +305,15 @@ class InsightChallengeSolution(object):
                 # Check if time window has elaspsed.
                 # remove edges of first hashtags in tweet_time_hashtag_graph map
                 if (self.hashtag_time_window_elapsed((t1, t2))):
+                    print_out("===> (UPDATE GRAPH) Window elapsed between {} and {}".format(t1, t2))
                     self.time_graph_last_modified = t2
                     self.remove_hashtags_edge(self.tweet_time_hashtag_graph[t1])
                     
+                    # Remove hashtags that are at position zero. 
+                    self.tweet_time_hashtag_graph.popitem(last=False)
+                    
+                    # Last Modified timestamp is now head in graph
+                    t1 = self.time_graph_last_modified 
                 
                 # Calculate Average Degree and Write to file
                 avg_deg = self.hashtag_graph_average_degrees()
@@ -445,7 +451,8 @@ class InsightChallengeSolution(object):
         
         dt1 = datetime.strptime(t1, '%b %d %Y %H:%M:%S')
         dt2 = datetime.strptime(t2, '%b %d %Y %H:%M:%S')
-        if ((dt1 - dt2).seconds >= self.update_interval):
+        time_delta = dt2 - dt1
+        if (time_delta.seconds >= self.update_interval):
             return True
         return False
     
@@ -472,27 +479,31 @@ class InsightChallengeSolution(object):
 if __name__ == '__main__':
     
     file_dir = os.path.dirname(os.path.realpath('__file__'))
-    input_file = file_dir + '/tweet_input/tweets.txt'
     output_file = file_dir + '/tweet_output/ft1.txt'
     output_file2 = file_dir + '/tweet_output/ft2.txt'
     
     # Get input and output file
     if len(sys.argv) < 2:
-        sys.stderr.write("Usage: python {} path_to_input_file path_to_output_file\n".format((sys.argv[0])))
+        sys.stderr.write("Usage: python {} path_to_input_file\n".format((sys.argv[0])))
         sys.exit(-1)
 
     if not os.path.exists(sys.argv[1]):
         sys.stderr.write("ERROR: Input file {} was not found!\n".format((sys.argv[1])))
         sys.exit(-1)
     
+    input_file = file_dir + '/' + sys.argv[1]
+    
     ############ FEATURE 1 ##################
     print_out("Starting Feature 1")
     
     # Simulate spining cursor
     spinning_cursor()
+    print_out("[Processing] ==> {}".format(input_file))
+    
     
     process_tweets(input_file, output_file)
     print_out("Done with Feature 1")
+    print_out("Output saved to {}".format(output_file))
     
     ############ FEATURE 2 ##################
     
@@ -501,10 +512,12 @@ if __name__ == '__main__':
     
     # Simulate spining cursor
     spinning_cursor()
-    
+    print_out("[Processing] ==> {}".format(input_file))
+        
     solution_2 = InsightChallengeSolution(input_file, output_file2)
     solution_2.build_hashtag_graph()
     print_out("Done with Feature 2")
+    print_out("Output saved to {}".format(output_file2))
     
     
     # For Debugging do not uncomment unless needed.
